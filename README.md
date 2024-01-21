@@ -47,19 +47,14 @@ I leave this up to the user to provide a reference if they want to go the refere
 ### Steps
 
 1. Prepare you images. Take as many images as you like (maybe 4 or 5?). For best results, the images should be distinctive and high-texture. I would also recommend using a set of images that is representative of your desired use case. (e.g. if you are using the camera at close range, dont tune on images taken at a distance, and vice versa. If you are using it in many scenearios, be sure to have a good mix in your dataset!)
-
 Know your baseline (distance between left and right camera)!
 If you have a large baseline, the optimization will probably not do well with images taken at very close range. 
 If you have a small baseline, the optimization will probably not do well with images taken from very far away.
-
 Images should have enough texture to get reasonable block matching results. e.g. If you take a picture of a solid-colored wall with a passive stereo camera, you probably wont get good results since that picture will not have enough texture for the block matching, regardless of how we tweak the parameters.
-
 TODO: It would be nice to analyze the dataset for the user
-
 1a. (Optional) Create reference images for your left stereo images as described in `Reference-based`. it should be saved in float-32 format as a .tiff file. The values should be disparity, not depth.
 
 2. Create a folder in `dataset` and in it create a `left` and `right` folder and (optionally) a `calib.yml` file and (optionally) a `reference` folder. There are examples in the `dataset` you can pattern match against. If you do provide a calib.yml file, the images should be raw, unrectified images from your camera (and the optional reference should align with the rectified left image). If you do not provide a calib.yml file, the images are assumed to aleady be rectified. 
-
 **THIS IS NOT A STEREO CAMERA CALIBRATION TOOL** It will not make up for a bad stereo camera calibration. Having a well calibrated camera, so we can get good quality rectified images, is critical to getting good disparity results with this library. If you find the optimization never converges to a good solution, consider checking your camera calibration before submitting an issue.
 
 3. Place your images in these folders. Corresponding images should have the same names. e.g.
@@ -70,19 +65,14 @@ dataset/<dataset_name>/reference/1.png <-- disparity image
 4. run autotune.py.
 Usage:
 `python autotune.py --dataset_name <dataset_name> --method <'ref' or 'no_ref'> --max_iter 1000 --patience 100`
-
 Your results will be stored to `./output/<dataset_name>`
-
 While it runs, go get a coffee, touch grass, etc... (-:
-
 The process writes the current results to the output directory/<dataset_name> whenever the optimizer is able to improve the result (so if you get impatient and want to stop it early, you can just hit Ctrl+c).
-
 WARNING: The code will overwrite existing results in the output/<dataset_name> directory! So be sure to copy over existing results before starting a new optimization.
 
 5. (Optional) To verify the parameters were not overfit to your dataset, its worthwhile to evaluate your results (requires your camera to be plugged in)
 assuming the camera returns the left and right image separately
 `python evaluate.py --dataset_name <dataset_name> --single_image False --left_cap_id 6 --right_cap_id 7`
-
 assuming the camera returns the left and right image concatenated
 `python evaluate.py --dataset_name <dataset_name> --single_image True --left_cap_id 6 --right_cap_id -1`
 

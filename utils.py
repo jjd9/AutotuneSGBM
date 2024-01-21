@@ -42,10 +42,10 @@ def project_left_to_right(disparity_map, left_image):
 
     Args:
     - disparity_map (numpy array): Disparity map obtained from StereoSGBM.
-    - left_pixels (numpy array): Pixel coordinates in the left camera image (shape: (N, 2)).
+    - left_pixels (numpy array): Left image
 
     Returns:
-    - right_pixels (numpy array): Projected pixel coordinates in the right camera image (shape: (N, 2)).
+    - right_pixels (numpy array): Right image reconstructed from the input left image
     """
 
     # Extract height and width from the disparity map

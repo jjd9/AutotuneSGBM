@@ -114,8 +114,8 @@ def objective(trial, method, image_data):
             # compute left and right error
             right_error = cv2.absdiff(rg, frg).astype(float)
 
-            # ignore invalid pixels (NOTE: since SGBM/BM alreaady have their own checks for occlusion that should 
-            # invlidate occluded pixels, I do not do any explicit occlusion handling in this error calculation)
+            # ignore invalid pixels (NOTE: since SGBM/BM already have their own checks for occlusion that should 
+            # invalidate occluded pixels, I do not do any explicit occlusion handling in this error calculation)
             # set to small, non-zero value to avoid the optimizer trying to game the process by choosing parameters 
             # that fill the image with invalid pixels
             right_error[~right_valid_proj_mask] = 10.0
