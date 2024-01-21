@@ -1,0 +1,33 @@
+height: 480
+width: 848
+
+left:
+  fx: 425.218445
+  fy: 425.218445
+  cx: 428.336975
+  cy: 240.807983
+  k1: 0
+  k2: 0
+  p1: 0
+  p2: 0
+  k3: 0
+
+right:
+  fx: 425.218445
+  fy: 425.218445
+  cx: 428.336975
+  cy: 240.807983
+  k1: 0
+  k2: 0
+  p1: 0
+  p2: 0
+  k3: 0
+
+stereo:
+  Baseline: 50.0742 # mm
+  TY: 0.0 # mm
+  TZ: 0.0 # mm
+  # rodrigues vector
+  RX: 0.0 # rads
+  RY: 0.0 # rads, ZED calls this CV
+  RZ: 0.0 # rads

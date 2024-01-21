@@ -1,0 +1,14 @@
+P1: 207
+P2: 808
+algo: StereoSGBM
+correlation_window_size: 5
+disp12MaxDiff: 9
+disparity_range: 64
+min_disparity: 0
+prefilter_cap: 29
+prefilter_size: 5
+prefilter_type: 1
+speckle_range: 15
+speckle_window_size: 162
+texture_threshold: 77
+uniqueness_ratio: 0
