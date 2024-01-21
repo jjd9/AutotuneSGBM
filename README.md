@@ -21,6 +21,12 @@ This is nice since it does not require us to find references BUT is more complex
 
 In my implementation, the "reference free" naming is a bit of a misnomer. Instead of having a disparity reference, I use the left and right images as the references. After computing disparity, the left image is transferred over to the right image using the disparity estimate. I then calculate the error  between these and weight the error by the gradient in the baseline direction (since low texture regions will likely have some error regardless of how we tweak the parameters and high texture regions likely be the most informative).
 
+![Disparity Estimate](https://github.com/jjd9/AutotuneSGBM/blob/main/output/ZED1/disparity_0.png)
+
+![Left-Right Reconstruction](https://github.com/jjd9/AutotuneSGBM/blob/main/output/ZED1/fake_right_0.png)
+
+![Left-Right Consistency](https://github.com/jjd9/AutotuneSGBM/blob/main/output/ZED1/right_error_0.png)
+
 #### Reference-based
 
 This is attractively simple at first glance. You have N left/right images and N good disparity images for reference. You tune the parameters to minimize some measure of distance between the stereo blocking matching outputs and the good disparity references. BUT where do you get the references from?
@@ -32,10 +38,11 @@ Some options are:
 
 I leave this up to the user to provide a reference if they want to go the reference-based route (see the `dataset/CRE`` example). I would recommend using [CREStereo](https://github.com/megvii-research/CREStereo) based on personal testing unless you have a low resolution stereo pair (i.e. << 1080x720 per camera) OR an active stereo camera (since active stereo camera dot patterns usuall confuse stereo NN methods), in which case, the reference-free method would be my recommendation.
 
+![Referece-based Example](https://github.com/jjd9/AutotuneSGBM/blob/main/output/CRE/disparity_0.png)
 
 ### Install Dependencies
 
-`pip install -e .`
+`pip install -r requirements.txt`
 
 ### Steps
 
@@ -47,7 +54,7 @@ If you have a small baseline, the optimization will probably not do well with im
 
 Images should have enough texture to get reasonable block matching results. e.g. If you take a picture of a solid-colored wall with a passive stereo camera, you probably wont get good results since that picture will not have enough texture for the block matching, regardless of how we tweak the parameters.
 
-# TODO: It would be nice to analyze the dataset for the user
+TODO: It would be nice to analyze the dataset for the user
 
 1a. (Optional) Create reference images for your left stereo images as described in `Reference-based`. it should be saved in float-32 format as a .tiff file. The values should be disparity, not depth.
 
