@@ -110,8 +110,6 @@ def evaluate(dataset_name, single_image, left_cap_id, right_cap_id):
                 imgRight = frameRight
 
             disparity_map = stereo_proc.compute(imgLeft, imgRight).astype(float) / 16.0
-            left_grad = compute_x_gradient(imgLeft)
-            disparity_map[left_grad < 0.5] = disparity_map.min()
             min_disp = min(disparity_map.min(), min_disp)
             max_disp = max(disparity_map.max(), max_disp)
             disparity_visual = (disparity_map - min_disp) / (
