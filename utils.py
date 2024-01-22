@@ -15,8 +15,7 @@ import yaml
 
 def compute_x_gradient(img):
     """
-    Compute the x gradient magnitude, and set pixels with low gradient to 0.1 and others to 1.0
-    #TODO: maybe replace with normalization with outlier rejection
+    Compute the x gradient magnitude, normalized btw 0.1 and 1.0
     """
     # Read the image
     if len(img.shape) == 3:
@@ -28,10 +27,8 @@ def compute_x_gradient(img):
     gradient_x = cv2.Sobel(gray_img, cv2.CV_64F, 1, 0, ksize=9)
     gradient_x = np.abs(gradient_x)
 
-    # Normalize the gradient values to be between 0 and 1
-    gradient_normalized = np.zeros_like(gray_img, dtype=float)
-    gradient_normalized[gradient_x > 10] = 1.0
-    gradient_normalized[gradient_x < 10] = 0.1
+    # Normalize the gradient values to be between 0.1 and 1
+    gradient_normalized = cv2.normalize(gradient_x, None, 0.1, 1.0, cv2.NORM_MINMAX)
 
     return gradient_normalized
 

@@ -9,6 +9,7 @@ Author: jjd9
 import cv2
 import numpy as np
 import optuna
+from skimage.metrics import structural_similarity as ssim
 
 from utils import (
     compute_x_gradient,
@@ -105,26 +106,35 @@ def objective(trial, method, image_data):
             if len(right_image.shape) == 3:
                 rg = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
                 frg = cv2.cvtColor(fake_right_image, cv2.COLOR_BGR2GRAY)
+                lt = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY)
             else:
                 rg = right_image
                 frg = fake_right_image
+                lt = left_image
+
+            # normalize the disparity map so we can compare it with the left image
+            normalized_disparity = cv2.normalize(disparity_map, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+
             # weight to force the optimization to pay attention to high texture regions
             right_grad_weight = compute_x_gradient(right_image)
 
-            # compute left and right error
-            right_error = cv2.absdiff(rg, frg).astype(float)
+            _, right_similarity_image = ssim(rg, frg, full=True, data_range=255)
+            # normalize ssim (-1,1) between 0 and 1
+            right_similarity_image = (right_similarity_image + 1.0) / 2.0
 
-            # ignore invalid pixels (NOTE: since SGBM/BM already have their own checks for occlusion that should 
-            # invalidate occluded pixels, I do not do any explicit occlusion handling in this error calculation)
-            # set to small, non-zero value to avoid the optimizer trying to game the process by choosing parameters 
-            # that fill the image with invalid pixels
-            right_error[~right_valid_proj_mask] = 10.0
+            # invert ssim
+            inv_right_similarity_image = 1.0 - right_similarity_image
 
             valid_pixel_count = np.count_nonzero(right_valid_proj_mask)
+            bad_pixel_ratio = 1.0 - valid_pixel_count/right_valid_proj_mask.size
             if valid_pixel_count == 0:
                 return np.inf
 
-            metric = np.sum(right_error * right_grad_weight) / valid_pixel_count
+            # Two sides of the metric:
+            # 1. the reconstructed right image should look like the right image (and we care about that the most where the x 
+            # gradient is high)
+            # 2. the structure of the left image should roughly match the disparity map
+            metric = np.mean(inv_right_similarity_image * right_grad_weight) + (1.0 - ssim(lt, normalized_disparity, data_range=255))
         else:
             raise ValueError(f"Method {method} not known!")
 
