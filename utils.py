@@ -12,6 +12,30 @@ import numpy as np
 import os
 import yaml
 
+def disp2color(disparity_map, minval, maxval):
+    disparity_visual = (disparity_map - minval) / (
+        maxval - minval
+    )
+    # Convert to a color image (pseudo-color)
+    disparity_visual = (disparity_visual * 255).astype(np.uint8)
+    disparity_visual = cv2.applyColorMap(disparity_visual, cv2.COLORMAP_JET)
+    disparity_visual[disparity_map == disparity_map.min()] *= 0
+    return disparity_visual
+
+def disparity_relative_smoothness(img, disp):
+    disp_gradients_x = np.abs(cv2.Sobel(disp, cv2.CV_64F, 1, 0, ksize=5)).astype(np.uint8).astype(float)
+    disp_gradients_y = np.abs(cv2.Sobel(disp, cv2.CV_64F, 0, 1, ksize=5)).astype(np.uint8).astype(float)
+
+    image_gradients_x = np.abs(cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=5)).astype(np.uint8).astype(float)
+    image_gradients_y = np.abs(cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=5) ).astype(np.uint8).astype(float)
+
+    weights_x = np.exp(-np.abs(image_gradients_x))
+    weights_y = np.exp(-np.abs(image_gradients_y))
+
+    smoothness_x = np.abs(disp_gradients_x) * weights_x
+    smoothness_y = np.abs(disp_gradients_y) * weights_y
+
+    return np.mean(smoothness_x + smoothness_y) / 255.0
 
 def compute_x_gradient(img):
     """
@@ -33,7 +57,7 @@ def compute_x_gradient(img):
     return gradient_normalized
 
 
-def project_left_to_right(disparity_map, left_image):
+def project_pixels_by_disparity(disparity_map, left_image):
     """
     Project pixels from the left camera onto the right camera using a disparity map.
 
@@ -180,6 +204,11 @@ def dict_to_stereo_proc(trial):
         raise ValueError(f"Unknown algorithm {algo}!")
     return stereo_proc
 
+def load_stereo_params(output_dir):
+    with open(os.path.join(output_dir, "stereo_params.yaml"), "r") as file:
+        stereo_proc_params = yaml.safe_load(file)
+    return stereo_proc_params
+
 
 def load_results(output_dir):
     with open(os.path.join(output_dir, "stereo_params.yaml"), "r") as file:
@@ -208,7 +237,7 @@ def save_results(image_data, params, output_dir):
             stereo_proc_left.compute(left_image, right_image).astype(float) / 16.0
         )
 
-        fake_right_image, valid_right_proj_pixels = project_left_to_right(
+        fake_right_image, valid_right_proj_pixels = project_pixels_by_disparity(
             disparity_map.astype(int), left_image
         )
 

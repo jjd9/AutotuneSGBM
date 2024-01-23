@@ -1,6 +1,6 @@
 ## Autotuning (SG)BM with Deep Learning
 
-***NOTE: This repo is a work in progress. I do not yet have any data to suggest this is better than hand tuning your (SG)BM algo.***
+***NOTE: This repo is a work in progress. I do not yet have any data to suggest this is better than hand tuning your (SG)BM algo. Expect occassional breaking changes.***
 
 ### Motivation
 I am not a fan of tuning OpenCV's stereo (SG)BM algorithm. It is an amazing piece of software, but it has many parameters that I find hard to tune to best fit my needs.
@@ -19,9 +19,11 @@ There are two options in image quality assessment, Reference-free and Reference-
 
 This is nice since it does not require us to find references BUT is more complex because we need to come up with some measure of image quality to optimize for in the absence of a reference. 
 
-In my implementation, the "reference free" naming is a bit of a misnomer. Instead of having a disparity reference, I use the left and right images as the references. This leverages two simple ideas:
+In my implementation, the "reference free" naming is a bit of a misnomer. Instead of having a disparity reference, I use the left and right images as the references. This leverages a few ideas (mostly taken from *MonoDepth*, see references):
 1. you can reconstruct the right image from the left image by shifting the left image's pixels by the disparity map values (Except at occlusions. it would be awesome to have a good way to detect occlusions and exclude them from this check). So any discrepancy between the right image and the reconstructed ("fake") right image suggests a suboptimal disparity map.
-2. the structure of the disparity map should match the structure of the left image.
+2. the structure of the left disparity map should match the structure of the left image.
+3. if you calculate disparity from left to right, it should match the values you get if you calculate disparity from right to left (except at those pesky occlusions).
+4. 1-3 apply whether you are considering the right OR the left image. 
 
 ![Disparity Estimate](https://github.com/jjd9/AutotuneSGBM/blob/main/output/ZED1/disparity_0.png)
 
@@ -78,6 +80,8 @@ assuming the camera returns the left and right image separately
 assuming the camera returns the left and right image concatenated
 `python evaluate.py --dataset_name <dataset_name> --single_image True --left_cap_id 6 --right_cap_id -1`
 
+The evaluation uses the ConsistentMatcher, a L/R consistency aware stereo(SG)BM wrapper. It uses l/r consistency to invalidate inconsistency disparty estimates.
+
 ### Contributing
 Did you find a bug? Please create a descriptive issue and provide example inputs.
 
@@ -86,3 +90,4 @@ Do you have ideas on how to make this better? Or did one of my TODO's strike you
 ### References
 - The images in dataset/CRE are from megvii-research/CREStereo and the reference was geneated using https://github.com/ibaiGorordo/CREStereo-Pytorch
 - The ranges for the search space are based on a mix of http://wiki.ros.org/stereo_image_proc/Tutorials/ChoosingGoodStereoParameters and https://learnopencv.com/depth-perception-using-stereo-camera-python-c/
+- I think Monodepth was the first publication on the idea of learning from L/R consistency: https://arxiv.org/pdf/1609.03677.pdf Godard, Clément, Oisin Mac Aodha, and Gabriel J. Brostow. "Unsupervised monocular depth estimation with left-right consistency." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2017.

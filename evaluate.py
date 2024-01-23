@@ -12,8 +12,8 @@ import cv2
 import numpy as np
 import os
 
-from utils import load_results, parse_calibration_file, compute_x_gradient
-
+from utils import load_results, parse_calibration_file, compute_x_gradient, load_stereo_params
+from consistent_stereo import ConsistentMatcher
 
 @click.command()
 @click.option("--dataset_name", type=str, help="Name of the dataset")
@@ -66,7 +66,9 @@ def evaluate(dataset_name, single_image, left_cap_id, right_cap_id):
 
     # get stereo params
     stereo_proc_params_path = os.path.join("output", dataset_name)
-    stereo_proc = load_results(stereo_proc_params_path)
+    stereo_params = load_stereo_params(stereo_proc_params_path)
+    algo = stereo_params["algo"]
+    stereo_proc = ConsistentMatcher(stereo_params) #load_results(stereo_proc_params_path)
 
     # setup for getting the images
     if single_image:
@@ -81,6 +83,7 @@ def evaluate(dataset_name, single_image, left_cap_id, right_cap_id):
     # loop as long as we keep getting images
     min_disp = 1e6
     max_disp = -1e6
+    s = 0
     try:
         while True:
             if single_image:
@@ -109,7 +112,11 @@ def evaluate(dataset_name, single_image, left_cap_id, right_cap_id):
                 imgLeft = frameLeft
                 imgRight = frameRight
 
-            disparity_map = stereo_proc.compute(imgLeft, imgRight).astype(float) / 16.0
+            if algo == "StereoBM" and len(imgLeft.shape)==3:
+                imgLeft = cv2.cvtColor(imgLeft, cv2.COLOR_BGR2GRAY)
+                imgRight = cv2.cvtColor(imgRight, cv2.COLOR_BGR2GRAY)
+            disparity_map, lr_consistency = stereo_proc.compute(imgLeft, imgRight)
+            disparity_map = disparity_map.astype(float) / 16.0
             min_disp = min(disparity_map.min(), min_disp)
             max_disp = max(disparity_map.max(), max_disp)
             disparity_visual = (disparity_map - min_disp) / (
@@ -120,10 +127,16 @@ def evaluate(dataset_name, single_image, left_cap_id, right_cap_id):
             disparity_visual = cv2.applyColorMap(disparity_visual, cv2.COLORMAP_JET)
             cv2.imshow("Rectified Left/Right", cv2.hconcat([imgLeft, imgRight]))
             cv2.imshow("disparity", disparity_visual)
+            cv2.imshow("L/R consistency", cv2.applyColorMap(lr_consistency.astype(np.uint8), cv2.COLORMAP_JET))
 
             # stop if the user presses q
-            if cv2.waitKey(1) & 0xFF == ord("q"):
+            key = cv2.waitKey(1)
+            if key & 0xFF == ord("q"):
                 break
+            elif key & 0xFF == ord("s"):
+                cv2.imwrite(f"left{s}.png", frameLeft)
+                cv2.imwrite(f"right{s}.png", frameRight)
+                s+=1
     finally:
         if single_image:
             capBoth.release()
