@@ -19,102 +19,92 @@ from utils import (
     save_results,
 )
 
-def bm_params(trial,n_channels):
-        params = dict()
-        # image preprocessing
-        ############################
-        params["prefilter_size"] = trial.suggest_int(
-            "prefilter_size", 5, 11, step=2
-        )  # must be odd
-        params["prefilter_cap"] = trial.suggest_int("prefilter_cap", 1, 32)
-        params["prefilter_type"] = trial.suggest_categorical(
-            "prefilter_type",
-            [
-                cv2.STEREO_BM_PREFILTER_NORMALIZED_RESPONSE,
-                cv2.STEREO_BM_PREFILTER_XSOBEL,
-            ],
-        )
-        ############################
 
-        # actual stereo matching
-        ############################
-        params["algo"] = trial.suggest_categorical("algo", ["StereoBM"])
-        params["correlation_window_size"] = trial.suggest_int(
-            "correlation_window_size", 5, 25, step=2
-        )
-        params["min_disparity"] = trial.suggest_int("min_disparity", -32, 64, step=16)
-        params["disparity_range"] = trial.suggest_int(
-            "disparity_range", 16, 256, step=16
-        )
-        ############################
+def bm_params(trial, n_channels):
+    params = dict()
+    # image preprocessing
+    ############################
+    params["prefilter_size"] = trial.suggest_int(
+        "prefilter_size", 5, 11, step=2
+    )  # must be odd
+    params["prefilter_cap"] = trial.suggest_int("prefilter_cap", 1, 32)
+    params["prefilter_type"] = trial.suggest_categorical(
+        "prefilter_type",
+        [
+            cv2.STEREO_BM_PREFILTER_NORMALIZED_RESPONSE,
+            cv2.STEREO_BM_PREFILTER_XSOBEL,
+        ],
+    )
+    ############################
 
-        # disparity post processing
-        ############################
-        params["P1"] = trial.suggest_int("P1", 0, 0)
-        params["P2"] = trial.suggest_int("P2", 0, 0)
+    # actual stereo matching
+    ############################
+    params["algo"] = trial.suggest_categorical("algo", ["StereoBM"])
+    params["correlation_window_size"] = trial.suggest_int(
+        "correlation_window_size", 5, 25, step=2
+    )
+    params["min_disparity"] = trial.suggest_int("min_disparity", -32, 64, step=16)
+    params["disparity_range"] = trial.suggest_int("disparity_range", 16, 256, step=16)
+    ############################
 
-        params["texture_threshold"] = trial.suggest_int("texture_threshold", 0, 100)
-        params["disp12MaxDiff"] = trial.suggest_int(
-            "disp12MaxDiff", -1, 128
-        )  # -1 == disabled
-        params["uniqueness_ratio"] = trial.suggest_int("uniqueness_ratio", 0, 30)
-        params["speckle_window_size"] = trial.suggest_int("speckle_window_size", 3, 25)
-        params["speckle_range"] = trial.suggest_int("speckle_range", 0, 30)
-        ############################
-        return params
+    # disparity post processing
+    ############################
+    # disabled for bm
+    params["P1"] = trial.suggest_int("P1", 0, 0)
+    # disabled for bm
+    params["P2"] = trial.suggest_int("P2", 0, 0)
+    # disabled for bm
+    params["disp12MaxDiff"] = trial.suggest_int("disp12MaxDiff", 0, 0)
+
+    params["texture_threshold"] = trial.suggest_int("texture_threshold", 0, 100)
+    params["uniqueness_ratio"] = trial.suggest_int("uniqueness_ratio", 0, 30)
+    params["speckle_window_size"] = trial.suggest_int("speckle_window_size", 3, 25)
+    params["speckle_range"] = trial.suggest_int("speckle_range", 0, 30)
+    ############################
+    return params
 
 
-def sgbm_params(trial,n_channels):
-        params = dict()
-        # image preprocessing
-        ############################
-        params["prefilter_size"] = trial.suggest_int("prefilter_size", 1, 1) #trial.suggest_int(
-        #     "prefilter_size", 5, 11, step=2
-        # )  # must be odd
-        params["prefilter_cap"] = trial.suggest_int("prefilter_cap", 1, 32)
-        params["prefilter_type"] = trial.suggest_int("prefilter_type", 1, 1) #trial.suggest_categorical(
-        #     "prefilter_type",
-        #     [
-        #         cv2.STEREO_BM_PREFILTER_NORMALIZED_RESPONSE,
-        #         cv2.STEREO_BM_PREFILTER_XSOBEL,
-        #     ],
-        # )
-        ############################
+def sgbm_params(trial, n_channels):
+    params = dict()
+    # image preprocessing
+    ############################
+    params["prefilter_cap"] = trial.suggest_int("prefilter_cap", 1, 32)
+    # disabled for sgbm
+    params["prefilter_size"] = trial.suggest_int("prefilter_size", 1, 1)
+    # disabled for sgbm
+    params["prefilter_type"] = trial.suggest_int("prefilter_type", 1, 1)
+    ############################
 
-        # actual stereo matching
-        ############################
-        params["algo"] = trial.suggest_categorical("algo", ["StereoSGBM"])
-        # params["algo"] = trial.suggest_categorical("algo", ["StereoBM", "StereoSGBM"])
-        params["correlation_window_size"] = trial.suggest_int(
-            "correlation_window_size", 5, 25, step=2
-        )
-        params["min_disparity"] = trial.suggest_int("min_disparity", -32, 64, step=16)
-        params["disparity_range"] = trial.suggest_int(
-            "disparity_range", 16, 256, step=16
-        )
-        ############################
+    # actual stereo matching
+    ############################
+    params["algo"] = trial.suggest_categorical("algo", ["StereoSGBM"])
 
-        # disparity post processing
-        ############################
+    params["correlation_window_size"] = trial.suggest_int(
+        "correlation_window_size", 5, 25, step=2
+    )
+    params["min_disparity"] = trial.suggest_int("min_disparity", -32, 64, step=16)
+    params["disparity_range"] = trial.suggest_int("disparity_range", 16, 256, step=16)
+    ############################
 
-        params["texture_threshold"] = trial.suggest_int("texture_threshold", 0,0)# trial.suggest_int("texture_threshold", 0, 100)
-        # P1 and P2 have a large range, so we opt to reduce the search space significantly with a good initial guess
-        P1_guess = min(
-            4000, int(8 * n_channels * params["correlation_window_size"] ** 2)
-        )
-        P2_guess = min(
-            4000, int(32 * n_channels * params["correlation_window_size"] ** 2)
-        )
-        params["P1"] = trial.suggest_int("P1", max(0, P1_guess - 10), P1_guess + 10)
-        params["P2"] = trial.suggest_int("P2", max(0, P2_guess - 10), P2_guess + 10)
-        params["disp12MaxDiff"] = trial.suggest_int(
-            "disp12MaxDiff", -1, 128
-        )  # -1 == disabled
-        params["uniqueness_ratio"] = trial.suggest_int("uniqueness_ratio", 0, 30)
-        params["speckle_window_size"] = trial.suggest_int("speckle_window_size", 3, 25)
-        params["speckle_range"] = trial.suggest_int("speckle_range", 0, 30)
-        ############################
-        return params
+    # disparity post processing
+    ############################
+
+    P1_guess = min(4000, int(8 * n_channels * params["correlation_window_size"] ** 2))
+    P2_guess = min(4000, int(32 * n_channels * params["correlation_window_size"] ** 2))
+    params["P1"] = trial.suggest_int("P1", max(0, P1_guess - 10), P1_guess + 10)
+    params["P2"] = trial.suggest_int("P2", max(0, P2_guess - 10), P2_guess + 10)
+    params["disp12MaxDiff"] = trial.suggest_int(
+        "disp12MaxDiff", -1, 128
+    )  # -1 == disabled
+    params["uniqueness_ratio"] = trial.suggest_int("uniqueness_ratio", 0, 30)
+    params["speckle_window_size"] = trial.suggest_int("speckle_window_size", 3, 25)
+    params["speckle_range"] = trial.suggest_int("speckle_range", 0, 30)
+
+    # disabled for sgbm
+    params["texture_threshold"] = trial.suggest_int("texture_threshold", 0, 0)
+    ############################
+    return params
+
 
 def objective(trial, method, image_data, stereo_algorithm="StereoSGBM"):
     if len(image_data[0][0].shape) == 3:
@@ -125,7 +115,6 @@ def objective(trial, method, image_data, stereo_algorithm="StereoSGBM"):
     if isinstance(trial, dict):
         params = trial
     else:
-        # TODO: Config file to modify search space dimensions
         if stereo_algorithm == "StereoSGBM":
             params = sgbm_params(trial, n_channels)
         elif stereo_algorithm == "StereoBM":
@@ -168,7 +157,8 @@ def objective(trial, method, image_data, stereo_algorithm="StereoSGBM"):
         )
 
         # if method == "no_ref"
-        for pyr_lvl in range(2): # another idea taken from monodepth
+        pyramid_levels = 3
+        for pyr_lvl in range(pyramid_levels):  # another idea taken from monodepth
             if pyr_lvl != 0:
                 right_image = cv2.pyrDown(
                     right_image,
@@ -260,7 +250,7 @@ def objective(trial, method, image_data, stereo_algorithm="StereoSGBM"):
             # normalize left ssim to be (0, 1) and flip
             inv_left_similarity = (
                 1.0 - (ssim(lt, normalized_left_disparity, data_range=255) + 1.0) / 2.0
-            )  
+            )
             inv_right_similarity = (
                 1.0 - (ssim(rg, normalized_right_disparity, data_range=255) + 1.0) / 2.0
             )
@@ -290,7 +280,9 @@ def objective(trial, method, image_data, stereo_algorithm="StereoSGBM"):
                 + 0.2 * inv_right_similarity
             )
 
-            error += left_error + right_error
+            # weight by pyramid level
+            pyramid_level_weight = 1.0 - pyr_lvl / pyramid_levels
+            error += pyramid_level_weight * (left_error + right_error)
 
     return error
 
