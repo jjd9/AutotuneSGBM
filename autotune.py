@@ -115,7 +115,7 @@ def autotune(dataset_name, method, max_iter, patience, stereo_algorithm, initial
 
     # run hyper-parameter optimization
     study = optuna.create_study(
-        direction="minimize", sampler=optuna.samplers.RandomSampler(seed=0)
+        direction="minimize", sampler=optuna.samplers.TPESampler(seed=0)
     )
 
     if os.path.exists(initial_params_path):
