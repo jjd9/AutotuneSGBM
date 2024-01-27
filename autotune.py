@@ -24,9 +24,10 @@ from utils import parse_calibration_file, save_results
     type=click.Choice(["ref", "no_ref"]),
     help='Method to use ("ref" or "no_ref")',
 )
+@click.option("--stereo_algorithm", type=click.Choice(["StereoBM", "StereoSGBM"]), default="StereoSGBM", help="Stereo algorithm to tune")
 @click.option("--max_iter", type=int, default=1000, help="Maximum number of iterations")
 @click.option("--patience", type=int, default=1000, help="Patience value")
-def autotune(dataset_name, method, max_iter, patience):
+def autotune(dataset_name, method, max_iter, patience, stereo_algorithm):
     image_dir = os.path.join("dataset", dataset_name)
     if not os.path.exists(image_dir):
         raise ValueError(f"Dataset directory not found at: {image_dir}")
@@ -109,7 +110,7 @@ def autotune(dataset_name, method, max_iter, patience):
     # package the data
     image_data = list(zip(left_images, right_images, ref_disparities))
 
-    obj_func = lambda trial: objective(trial, method, image_data)
+    obj_func = lambda trial: objective(trial, method, image_data, stereo_algorithm)
 
     # run hyper-parameter optimization
     # TODO: Allow user to specify sampler

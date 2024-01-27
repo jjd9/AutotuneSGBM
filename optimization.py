@@ -17,7 +17,6 @@ from utils import (
     dict_to_stereo_proc,
     project_pixels_by_disparity,
     save_results,
-    disparity_relative_smoothness
 )
 
 def bm_params(trial,n_channels):
@@ -117,7 +116,7 @@ def sgbm_params(trial,n_channels):
         ############################
         return params
 
-def objective(trial, method, image_data):
+def objective(trial, method, image_data, stereo_algorithm="StereoSGBM"):
     if len(image_data[0][0].shape) == 3:
         n_channels = 3
     else:
@@ -127,9 +126,12 @@ def objective(trial, method, image_data):
         params = trial
     else:
         # TODO: Config file to modify search space dimensions
-
-        # params = bm_params(trial, n_channels)
-        params = sgbm_params(trial, n_channels)
+        if stereo_algorithm == "StereoSGBM":
+            params = sgbm_params(trial, n_channels)
+        elif stereo_algorithm == "StereoBM":
+            params = bm_params(trial, n_channels)
+        else:
+            raise ValueError(f"Unknown stereo algorithm {stereo_algorithm}")
 
     # Create the StereoSGBM object
     stereo_proc_left = dict_to_stereo_proc(params)
@@ -195,6 +197,21 @@ def objective(trial, method, image_data):
                 right_disparity.astype(int), right_image
             )
 
+            # projection left disparity to right and vice versa
+            fake_right_disparity, _ = project_pixels_by_disparity(
+                left_disparity.astype(int), -left_disparity
+            )
+            fake_right_disparity[
+                right_disparity == right_disparity.min()
+            ] = right_disparity.min()
+
+            fake_left_disparity, _ = project_pixels_by_disparity(
+                right_disparity.astype(int), -right_disparity
+            )
+            fake_left_disparity[
+                left_disparity == left_disparity.min()
+            ] = left_disparity.min()
+
             if len(right_image.shape) == 3:
                 rg = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
                 frg = cv2.cvtColor(fake_right_image, cv2.COLOR_BGR2GRAY)
@@ -206,7 +223,7 @@ def objective(trial, method, image_data):
                 lt = left_image
                 flt = fake_left_image
 
-            # Compute reconstruction error
+            # Compute reconstruction error terms
 
             # weight to force the optimization to pay attention to high texture regions
             right_grad_weight = compute_x_gradient(rg)
@@ -241,8 +258,6 @@ def objective(trial, method, image_data):
             ).astype(np.uint8)
 
             # normalize left ssim to be (0, 1) and flip
-            # inv_left_similarity = left_gradient_loss = disparity_relative_smoothness(lt, normalized_left_disparity)
-            # inv_right_similarity = right_gradient_loss = disparity_relative_smoothness(lt, normalized_left_disparity)
             inv_left_similarity = (
                 1.0 - (ssim(lt, normalized_left_disparity, data_range=255) + 1.0) / 2.0
             )  
@@ -251,13 +266,6 @@ def objective(trial, method, image_data):
             )
 
             # compute fake disparities for L/R consistency checks
-
-            fake_right_disparity, _ = project_pixels_by_disparity(
-                left_disparity.astype(int), -left_disparity
-            )
-            fake_right_disparity[
-                right_disparity == right_disparity.min()
-            ] = right_disparity.min()
             lr_disparity_inconsistency = (
                 np.mean(
                     np.abs(fake_right_disparity - right_disparity) * right_grad_weight
@@ -265,12 +273,6 @@ def objective(trial, method, image_data):
                 / 320.0
             )
 
-            fake_left_disparity, _ = project_pixels_by_disparity(
-                right_disparity.astype(int), -right_disparity
-            )
-            fake_left_disparity[
-                left_disparity == left_disparity.min()
-            ] = left_disparity.min()
             rl_disparity_inconsistency = (
                 np.mean(np.abs(fake_left_disparity - left_disparity) * left_grad_weight)
                 / 320.0
