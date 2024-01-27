@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 import os
 
-from utils import load_results, parse_calibration_file, compute_x_gradient, load_stereo_params
+from utils import parse_calibration_file, load_stereo_params
 from consistent_stereo import ConsistentMatcher
 
 @click.command()
@@ -66,7 +66,7 @@ def evaluate(dataset_name, single_image, left_cap_id, right_cap_id):
 
     # get stereo params
     stereo_proc_params_path = os.path.join("output", dataset_name)
-    stereo_params = load_stereo_params(stereo_proc_params_path)
+    stereo_params = load_stereo_params(os.path.join(stereo_proc_params_path, "stereo_params.yaml"))
     algo = stereo_params["algo"]
     stereo_proc = ConsistentMatcher(stereo_params) #load_results(stereo_proc_params_path)
 

@@ -204,8 +204,8 @@ def dict_to_stereo_proc(trial):
         raise ValueError(f"Unknown algorithm {algo}!")
     return stereo_proc
 
-def load_stereo_params(output_dir):
-    with open(os.path.join(output_dir, "stereo_params.yaml"), "r") as file:
+def load_stereo_params(absolute_params_file_path):
+    with open(absolute_params_file_path, "r") as file:
         stereo_proc_params = yaml.safe_load(file)
     return stereo_proc_params
 

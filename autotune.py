@@ -14,7 +14,7 @@ import os
 from tqdm import tqdm
 
 from optimization import objective, SaveBestTrialCallback
-from utils import parse_calibration_file, save_results
+from utils import parse_calibration_file, save_results, load_stereo_params
 
 
 @click.command()
@@ -27,7 +27,8 @@ from utils import parse_calibration_file, save_results
 @click.option("--stereo_algorithm", type=click.Choice(["StereoBM", "StereoSGBM"]), default="StereoSGBM", help="Stereo algorithm to tune")
 @click.option("--max_iter", type=int, default=1000, help="Maximum number of iterations")
 @click.option("--patience", type=int, default=1000, help="Patience value")
-def autotune(dataset_name, method, max_iter, patience, stereo_algorithm):
+@click.option("--initial_params_path", type=str, default="params_XXX.yaml", help="Path to yaml file with initial guess for stereo params")
+def autotune(dataset_name, method, max_iter, patience, stereo_algorithm, initial_params_path):
     image_dir = os.path.join("dataset", dataset_name)
     if not os.path.exists(image_dir):
         raise ValueError(f"Dataset directory not found at: {image_dir}")
@@ -113,16 +114,14 @@ def autotune(dataset_name, method, max_iter, patience, stereo_algorithm):
     obj_func = lambda trial: objective(trial, method, image_data, stereo_algorithm)
 
     # run hyper-parameter optimization
-    # TODO: Allow user to specify sampler
     study = optuna.create_study(
-        direction="minimize", sampler=optuna.samplers.TPESampler(seed=0)
+        direction="minimize", sampler=optuna.samplers.RandomSampler(seed=0)
     )
 
-    # TODO: Optional initial guess from user
-    # initial_params = {}
-    # if initial_params is not None:
-    #     print("User provided initial guess!")
-    #     study.enqueue_trial(initial_params)
+    if os.path.exists(initial_params_path):
+        print(f"Loading initial guess from file: {initial_params_path}")
+        initial_params = load_stereo_params(initial_params_path)
+        study.enqueue_trial(initial_params)
 
     try:
         study.optimize(
