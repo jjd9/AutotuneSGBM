@@ -52,13 +52,18 @@ I leave this up to the user to provide a reference if they want to go the refere
 
 1. Prepare you images. Take as many images as you like (maybe 4 or 5?). For best results, the images should be distinctive and high-texture. I would also recommend using a set of images that is representative of your desired use case. (e.g. if you are using the camera at close range, dont tune on images taken at a distance, and vice versa. If you are using it in many scenearios, be sure to have a good mix in your dataset!)
 Know your baseline (distance between left and right camera)!
+
 If you have a large baseline, the optimization will probably not do well with images taken at very close range. 
+
 If you have a small baseline, the optimization will probably not do well with images taken from very far away.
 Images should have enough texture to get reasonable block matching results. e.g. If you take a picture of a solid-colored wall with a passive stereo camera, you probably wont get good results since that picture will not have enough texture for the block matching, regardless of how we tweak the parameters.
+
 TODO: It would be nice to analyze the dataset for the user
+
 1a. (Optional) Create reference images for your left stereo images as described in `Reference-based`. it should be saved in float-32 format as a .tiff file. The values should be disparity, not depth.
 
-2. Create a folder in `dataset` and in it create a `left` and `right` folder and (optionally) a `calib.yml` file and (optionally) a `reference` folder. There are examples in the `dataset` you can pattern match against. If you do provide a calib.yml file, the images should be raw, unrectified images from your camera (and the optional reference should align with the rectified left image). If you do not provide a calib.yml file, the images are assumed to aleady be rectified. 
+2. Create a folder in `dataset` and in it create a `left` and `right` folder and (optionally) a `calib.yaml` file and (optionally) a `reference` folder. There are examples in the `dataset` you can pattern match against. If you do provide a calib.yaml file, the images should be raw, unrectified images from your camera (and the optional reference should align with the rectified left image). If you do not provide a calib.yaml file, the images are assumed to aleady be rectified. 
+
 **THIS IS NOT A STEREO CAMERA CALIBRATION TOOL** It will not make up for a bad stereo camera calibration. Having a well calibrated camera, so we can get good quality rectified images, is critical to getting good disparity results with this library. If you find the optimization never converges to a good solution, consider checking your camera calibration before submitting an issue.
 
 3. Place your images in these folders. Corresponding images should have the same names. e.g.
@@ -80,7 +85,7 @@ assuming the camera returns the left and right image separately
 assuming the camera returns the left and right image concatenated
 `python evaluate.py --dataset_name <dataset_name> --single_image True --left_cap_id 6 --right_cap_id -1`
 
-The evaluation uses the ConsistentMatcher, a L/R consistency aware stereo(SG)BM wrapper. It uses l/r consistency to invalidate inconsistency disparty estimates.
+The evaluation uses the ConsistentMatcher, a L/R consistency aware stereo(SG)BM wrapper. It uses l/r consistency to invalidate inconsistent disparity estimates.
 
 ### Contributing
 Did you find a bug? Please create a descriptive issue and provide example inputs.
@@ -90,4 +95,4 @@ Do you have ideas on how to make this better? Or did one of my TODO's strike you
 ### References
 - The images in dataset/CRE are from megvii-research/CREStereo and the reference was geneated using https://github.com/ibaiGorordo/CREStereo-Pytorch
 - The ranges for the search space are based on a mix of http://wiki.ros.org/stereo_image_proc/Tutorials/ChoosingGoodStereoParameters and https://learnopencv.com/depth-perception-using-stereo-camera-python-c/
-- I think Monodepth was the first publication on the idea of learning from L/R consistency: https://arxiv.org/pdf/1609.03677.pdf Godard, Clément, Oisin Mac Aodha, and Gabriel J. Brostow. "Unsupervised monocular depth estimation with left-right consistency." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2017.
+- This idea was inspired by the loss function proposed for training Monodepth: https://arxiv.org/pdf/1609.03677.pdf Godard, Clément, Oisin Mac Aodha, and Gabriel J. Brostow. "Unsupervised monocular depth estimation with left-right consistency." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2017.
